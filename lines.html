@@ -251,6 +251,7 @@
                 .toFixed(6));
             var ctx = ev.target.getContext("2d");
             window._ctx = ctx;
+            ctx.beginPath();
             ctx.arc(ev.layerX, ev.layerY, 5, 0, Math.PI * 2, true);
             ctx.stroke();
             if (points.length > 2) {
