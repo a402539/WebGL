@@ -141,14 +141,14 @@
             let n = points.length;
             if (n < 3) return []; // треугольников нет 
             points = points.slice(0); // копия массива 
-            
+
             // массив индексов, отсортированных по координате икс
             let ind = [];
             for (let i = 0; i < n; i++) ind.push(i);
             ind.sort(function (l, r) {
                 return points[r][0] - points[l][0];
             })
-            
+
             // находим треугольник, содержащий все точки, и вставлем его в конец массива с вершинами
             let big = big_triangle(points);
             points.push(big[0]);
@@ -238,11 +238,11 @@
             ctx.stroke();
         }
         */
-       
     </script>
 
     <script type="text/javascript">
-        points = []; window.points1 = [];
+        points = [];
+        window.points1 = [];
         var txt = document.getElementById("txt");
         document.getElementById("canvas").onclick = function (ev) {
             //console.log('клик ev',ev);
@@ -396,7 +396,7 @@
         function triang(pts) {
             // отрисовка триангуляции
             console.log(pts);
-            var ctx = window._ctx;
+            ctx = window._ctx;
             ctx.strokeStyle = "red";
             let triangles = triangulate(pts);
             // отрисовка сгенерированных точек
@@ -405,8 +405,9 @@
                 ctx.arc(pts[i][0], pts[i][1], 15, 0, 2 * Math.PI);
                 ctx.closePath();
                 ctx.fill();
-                ctx.stroke();
-                // отрисовка треугольников for (let i=0; i < triangles.length;) {
+            } 
+            // отрисовка треугольников 
+            for (let i=0; i < triangles.length;) {
                 ctx.beginPath();
                 ctx.moveTo(pts[triangles[i]][0], pts[triangles[i]][1]);
                 i++;
@@ -419,7 +420,6 @@
                 ctx.stroke();
             }
         }
-
     </script>
 </body>
 
