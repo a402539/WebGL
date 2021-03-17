@@ -1,0 +1,42 @@
+<h2>WebGL</h2>
+
+<p>webGL lessons and education</p>
+
+<p>To implement and illustrate a 2-dimensional interpolation.</p>
+
+<p>We have some triangulation network on a plane. Find a function on a plane with prescribed values on a boundary of
+    triangulation, having smooth change of derivatives</p>
+
+<ul> Примеры WebGL
+
+ <li><a href="1.html">Два отдельных треугольника</a></li>
+ <li><a href="2.html">Два сопряженных треугольника</a></li>
+ <li><a href="lines.html">Линии</a></li>
+ <li><a href="https://webglfundamentals.org/webgl/lessons/webgl-points-lines-triangles.html">points-lines-triangles</a></li>
+ <li><a href="colors.html">Использование цвета</a></li>
+
+</ul>
+
+
+<h2>Задача двумерной интерполяции</h2>
+
+<p>Задано некоторое множество точек в пространстве (x,y,z), имеющее взаимно-однозначное соответствие с проекцией на
+    плоскость (x,y). Другими словами, над каждой точкой проекции - ровно одна точка в пространстве. Считаем, что таким
+    образом определена дискретная функция f:(x,y)->(x,y,z), определенная на точках (x,y) проекции и сопоставляющая
+    каждой точке этой проекции некоторую точку (x,y,z) пространства.</p>
+
+<ol>
+    
+
+    <li>Построить триангуляцию заданного множества точек - разбиение области на треугольники.
+        <ul>
+            <li><a href="delone.html">Триангуляция Делоне</a></li>
+        </ul>
+    </li>
+
+    <li>Построить непрерывную кусочно-линейную функцию g, определенную на выпуклой оболочке и линейную на каждом треугольнике.</li>
+
+    <li>Построить гладкую (т.е. непрерывную вместе с первыми производными) функцию h, определенную на выпуклой оболочке,
+      совпадающую с функцией f на точках проекции, "близкую" к функции g.</li>
+
+</ol>

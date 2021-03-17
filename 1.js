@@ -65,6 +65,9 @@ function main() {
         0, 0,
         0, 0.5,
         0.7, 0,
+        0.2, 0.7,
+        0.3, 0.6,
+        0.4, 0.4,
     ];
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
@@ -100,8 +103,12 @@ function main() {
 
     // draw
     var primitiveType = gl.TRIANGLES;
-    var offset = 0;
     var count = 3;
+    gl.drawArrays(primitiveType, offset, count);
+    offset = 3;
+    count = 3;
+    gl.vertexAttribPointer(
+        positionAttributeLocation, size, type, normalize, stride, offset);
     gl.drawArrays(primitiveType, offset, count);
 }
 
