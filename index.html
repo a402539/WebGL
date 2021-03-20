@@ -11,10 +11,21 @@
 
  <li><a href="1.html">Два отдельных треугольника</a></li>
  <li><a href="2.html">Два сопряженных треугольника</a></li>
+ <li><a href="points.html">Точки</a></li>
+ <li><a href="points2.html">Точки с цветом</a></li>
+ <li><a href="lines1.html">lines1</a></li>
  <li><a href="https://webglfundamentals.org/webgl/lessons/webgl-points-lines-triangles.html">points-lines-triangles</a></li>
  <li><a href="colors.html">Использование цвета</a></li>
 
 </ul>
+<pre>
+    https://stackoverflow.com/questions/32684930/draw-lines-in-different-colors-using-webgl
+    You can interleave the vertex colors inside the vertex buffer eg:
+    x,y,z,r,g,b,a
+    and:
+    gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 16, 0);
+    gl.vertexAttribPointer(aVertexColor, 4, gl.UNSIGNED_BYTE, true, 16, 12);
+</pre>
 
 
 <h2>Задача двумерной интерполяции</h2>
@@ -30,7 +41,8 @@
     <li>Построить триангуляцию заданного множества точек - разбиение области на треугольники.
         <ul>
             <li><a href="delone.html">Триангуляция Делоне (образец)</a></li>
-            <li><a href="lines.html">Ввод точек, WebGL, Триангуляция</a></li>
+            <li><a href="lines2.html">Ввод точек, WebGL, Триангуляция</a></li>
+            <li><a href="points.html">Ввод точек, WebGL (точки, линии, треугольники) (, Триангуляция)</a></li>
         </ul>
     </li>
 

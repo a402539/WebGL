@@ -7,7 +7,7 @@ var ctx = canvas2d.getContext("2d");
 canvas2d.onclick = function (ev) {
 	//console.log('клик ev',ev);
 	window.points1.push([ev.layerX, ev.layerY]);
-	points.push((2 * ev.layerX / ev.target.width - 1).toFixed(6), (-2 * ev.layerY / ev.target.height + 1).toFixed(6));
+	points.push(2 * ev.layerX / ev.target.width - 1, 1 - 2 * ev.layerY / ev.target.height);
 	//window._ctx = ctx;
 	ctx.beginPath();
 	ctx.arc(ev.layerX, ev.layerY, 5, 0, Math.PI * 2, true);
@@ -18,7 +18,7 @@ canvas2d.onclick = function (ev) {
 	}
 	txt.innerHTML = points.join(',\n');
 	//console.log('points', points);
-}
+};
 var gl;
 var shaderProgram;
 var vertexBuffer; // буфер вершин
@@ -81,7 +81,7 @@ function initBuffers(points) {
 	indices = [];
 	for (var i = 0; 2 * i < vertices.length - 2; i++) {
 		indices.push(i, i + 1);
-	};
+	}
 	// console.log('indices', indices);
 	// [0, 1, 1, 2, 2, 3, 3, 4];
 	// установка буфера вершин
@@ -100,7 +100,7 @@ function initBuffers(points) {
 
 function draw() {
 
-	gl.clearColor(0.0, 0.0, 0.0, 1.0);
+	gl.clearColor(1, 1, 1, 1);
 
 	gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 
@@ -133,11 +133,12 @@ window.onload = function () {
 		draw();
 	}
 
-	var value = true //условие появления кнопки, true - появиться, false - нет
+	var value = true; 
+	//условие появления кнопки, true - появиться, false - нет
 	var btn = document.createElement('button'); //создаём нашу кнопку
 	btn.onclick = function (ev) {
 		triang(points1);
-	}
+	};
 
 	var textInBtn = document.createTextNode('Триангуляция'); //создаем текст для кнопки
 
@@ -150,7 +151,7 @@ window.onload = function () {
 		btn.remove();
 	}
 
-}
+};
 
 function triang(pts) {
 	// отрисовка триангуляции

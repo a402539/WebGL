@@ -1,0 +1,252 @@
+<!doctype html>
+<html>
+<!-- https://www.tutorialspoint.com/webgl/webgl_drawing_points.htm -->
+
+<body>
+    <select id="mode">
+        <option value="points" default>Точки</option>
+        <option value="lines">Линии</option>
+        <option value="triangles">Треугольники</option>
+    </select>
+    <br>
+    <canvas width="600" height="600" id="my_Canvas"></canvas>
+    <textarea id="txt"></textarea>
+
+    <style>
+        #my_Canvas {
+            border: 1px solid;
+        }
+        #txt {
+        height: 600px;
+        }
+    </style>
+
+    <script id="vertex" type="x-shader">
+        attribute vec2 aVertexPosition;
+        attribute vec4 vColor;
+
+        varying vec4 fColor;
+
+        void main() {
+            gl_Position = vec4(aVertexPosition, 0.0, 1.0);
+            gl_PointSize = 10.0;
+            fColor = vColor;
+
+
+        }
+    </script>
+    <script id="fragment" type="x-shader">
+        #ifdef GL_ES
+            precision highp float;
+        #endif
+        varying vec4 fColor;
+        void main() {
+            gl_FragColor = fColor;
+
+        }
+    </script>
+
+    <script>
+        var txt = document.getElementById("txt");
+        var points = [];
+        var canvas = document.getElementById('my_Canvas');
+        gl = canvas.getContext('webgl');
+        color = [0.0, 0.0, 0.0, 1.0];
+        canvas.onclick = function (ev) {
+            points.push(2 * ev.layerX / ev.target.width - 1, 1 - 2 * ev.layerY / ev.target.height);
+            txt.innerHTML = points.join(',\n');
+            mode = document.querySelector('#mode').selectedIndex;
+            if (mode == 0 || points.length < 4) {
+                drawPoints(points);
+            } else if (mode == 1 || points.length < 6) {
+                drawLines(points);
+            } else {
+                drawTriangles(points);
+            }
+        }
+
+        function drawPoints(points) {
+
+            initShaders();
+
+            gl.drawArrays(gl.POINTS, 0, points.length / 2);
+
+        }
+
+        function drawLines(points) {
+
+            initShaders();
+
+            indices = [];
+            for (var i = 0; i < points.length / 2 - 1; i++) {
+                indices.push(i, i + 1);
+            }
+            // создание буфера индексов
+            indexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+            // указываем число индексов это число равно числу индексов
+            indexBuffer.numberOfItems = indices.length;
+
+            gl.drawElements(gl.LINES, indices.length, gl.UNSIGNED_SHORT, 0);
+        }
+
+        function drawTriangles(points) {
+
+            initShaders();
+
+            indices = [];
+            for (var i = 0; i < points.length / 2 - 2; i++) {
+                indices.push(i, i + 1, i + 2);
+            } // создание буфера индексов
+            indexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW); 
+            indexBuffer.numberOfItems = indices.length; 
+
+            gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+        }
+
+        function initShaders() {
+
+            // Create an empty buffer object to store the vertex buffer
+            var vertex_buffer = gl.createBuffer();
+
+            //Bind appropriate array buffer to it
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
+
+            // Pass the vertex data to the buffer
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points), gl.STATIC_DRAW);
+
+            // Unbind the buffer
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+            /*=========================Shaders========================*/
+
+            // vertex shader source code
+            /*
+            var vertCode =
+                'attribute vec3 coordinates;' +
+                'attribute vec4 vColor;' +
+                'varying vec4 fColor;' +
+                'void main(void) {' +
+                ' gl_Position = vec4(coordinates, 1.0);' +
+                ' gl_PointSize = 10.0;' +
+                ' fColor = vColor;' +
+                '}';
+
+            // Create a vertex shader object
+            var vertShader = gl.createShader(gl.VERTEX_SHADER);
+
+            // Attach vertex shader source code
+            gl.shaderSource(vertShader, vertCode);
+
+            // Compile the vertex shader
+            gl.compileShader(vertShader);
+            */
+
+            var v = document.getElementById("vertex").firstChild.nodeValue;
+            var f = document.getElementById("fragment").firstChild.nodeValue;
+
+            var vs = gl.createShader(gl.VERTEX_SHADER);
+            gl.shaderSource(vs, v);
+            gl.compileShader(vs);
+
+            var fs = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(fs, f);
+            gl.compileShader(fs);
+
+            var program = gl.createProgram();
+            gl.attachShader(program, vs);
+            gl.attachShader(program, fs);
+            gl.linkProgram(program);
+
+
+            gl.useProgram(program);
+
+            /*
+            // fragment shader source code
+            var fragCode =
+                'varying vec4 fColor;' +
+                'void main(void) {' +
+                ' gl_FragColor = fColor;' +
+                '}';
+
+            // Create fragment shader object
+            var fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+
+            // Attach fragment shader source code
+            gl.shaderSource(fragShader, fragCode);
+
+            // Compile the fragmentt shader
+            gl.compileShader(fragShader);
+
+            // Create a shader program object to store
+            // the combined shader program
+            var shaderProgram = gl.createProgram();
+
+            // Attach a vertex shader
+            gl.attachShader(shaderProgram, vertShader);
+
+            // Attach a fragment shader
+            gl.attachShader(shaderProgram, fragShader);
+
+            // Link both programs
+            gl.linkProgram(shaderProgram);
+
+            // Use the combined shader program object
+            gl.useProgram(shaderProgram);
+            */
+
+            /*======== Associating shaders to buffer objects ========*/
+
+            // Bind vertex buffer object
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
+
+            // Get the attribute location
+            var coord = gl.getAttribLocation(program, "aVertexPosition");
+
+            // Point an attribute to the currently bound VBO
+            gl.vertexAttribPointer(coord, 2, gl.FLOAT, false, 0, 0);
+
+            // Enable the attribute
+            gl.enableVertexAttribArray(coord);
+
+            /*============= Drawing the primitive ===============*/
+
+            // Clear the canvas
+            gl.clearColor(0.5, 0.5, 0.5, 0.9);
+
+            // Enable the depth test
+            gl.enable(gl.DEPTH_TEST);
+
+            // Clear the color buffer bit
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+            // Set the view port
+            gl.viewport(0, 0, canvas.width, canvas.height);
+
+            var cBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, 16 * 200, gl.STREAM_DRAW );
+            program.vColor = gl.getAttribLocation(program, "vColor");
+            gl.enableVertexAttribArray(program.vColor);
+            gl.vertexAttribPointer(program.vColor, 3, gl.FLOAT, false, 0, 0);
+
+            //render();
+        }
+
+        function render() {
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.drawArrays(gl.POINTS, 0, index);
+
+            // Что такое requestAnimationFrame? https://html5.by/blog/what-is-requestanimationframe/
+            window.requestAnimationFrame(render);
+
+        }
+
+
+    </script>
+</body>
+
+</html>

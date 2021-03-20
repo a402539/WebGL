@@ -1,0 +1,114 @@
+<html>
+<!-- https://stackoverflow.com/questions/31322725/draw-points-on-click-in-webgl -->
+<head>
+    <meta charset="utf-8">
+    <style>
+        #mycanvas {
+            border: 1px solid;
+        }
+    </style>
+
+    <script id="vertex" type="x-shader">
+        attribute vec2 aVertexPosition;
+        attribute vec4 vColor;
+
+        varying vec4 fColor;
+
+        void main() {
+            gl_Position = vec4(aVertexPosition, 0.0, 1.0);
+            gl_PointSize = 10.0;
+            fColor = vColor;
+
+
+        }
+    </script>
+    <script id="fragment" type="x-shader">
+        #ifdef GL_ES
+            precision highp float;
+        #endif
+        varying vec4 fColor;
+        void main() {
+            gl_FragColor = fColor;
+
+        }
+    </script>
+    <script type="text/javascript">
+        var points = [];
+        var index = 0;
+
+        function init1() {
+            var canvas = document.getElementById("mycanvas");
+            gl = canvas.getContext("webgl");
+            gl.viewport(0, 0, canvas.width, canvas.height);
+            gl.clearColor(1.0, 1.0, 1.0, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+            var v = document.getElementById("vertex").firstChild.nodeValue;
+            var f = document.getElementById("fragment").firstChild.nodeValue;
+
+            var vs = gl.createShader(gl.VERTEX_SHADER);
+            gl.shaderSource(vs, v);
+            gl.compileShader(vs);
+
+            var fs = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(fs, f);
+            gl.compileShader(fs);
+
+            var program = gl.createProgram();
+            gl.attachShader(program, vs);
+            gl.attachShader(program, fs);
+            gl.linkProgram(program);
+
+
+            gl.useProgram(program);
+
+            color = [0.0, 0.0, 0.0, 1.0];
+            var vbuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, vbuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, 8 * 200, gl.STREAM_DRAW );
+            program.aVertexPosition = gl.getAttribLocation(program, "aVertexPosition");
+            gl.enableVertexAttribArray(program.aVertexPosition);
+            gl.vertexAttribPointer(program.aVertexPosition, 2, gl.FLOAT, false, 0, 0);
+
+
+            var cBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, 16 * 200, gl.STREAM_DRAW );
+            program.vColor = gl.getAttribLocation(program, "vColor");
+            gl.enableVertexAttribArray(program.vColor);
+            gl.vertexAttribPointer(program.vColor, 3, gl.FLOAT, false, 0, 0);
+
+            var flattenedVertices = [];
+            var idx = 0;
+            canvas.addEventListener("mousedown", function (event) {
+                x = 2 * event.clientX / canvas.width - 1;
+                y = 2 * (canvas.height - event.clientY) / canvas.height - 1;
+                var pts = [x, y];
+                points.push(pts);
+
+                var i = index;
+                gl.bindBuffer(gl.ARRAY_BUFFER, vbuffer);
+                gl.bufferSubData(gl.ARRAY_BUFFER, 8*i, new Float32Array(pts));
+                gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+                gl.bufferSubData(gl.ARRAY_BUFFER, 16*i, new Float32Array(color));
+                index ++;
+
+            });
+            render();
+
+        }
+
+        function render() {
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.drawArrays(gl.POINTS, 0, index);
+
+            // Что такое requestAnimationFrame? https://html5.by/blog/what-is-requestanimationframe/
+            window.requestAnimationFrame(render);
+
+        }
+    </script>
+</head>
+
+<body onload="init1()">
+    <canvas id="mycanvas" width="800" height="500"></canvas>
+</body>
