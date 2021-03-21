@@ -22,6 +22,8 @@
         }
     </style>
 
+	<script defer src='./js/triangulate.js'></script>
+
     <script id="vertex" type="x-shader">
         attribute vec2 aVertexPosition;
         attribute vec4 vColor;
@@ -68,13 +70,13 @@
 
         function draw(point, mode) {
 
-            
+
             if (mode == 0) { // точки
-            
+
                 initShaders(points, mode);
 
                 gl.drawArrays(gl.POINTS, 0, points.length);
-            
+
             } else if (mode == 1) { // отрезки
 
                 vertices = []; // vertices of lines
@@ -94,18 +96,25 @@
                 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
                 gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
                 // указываем число индексов это число равно числу индексов
-                indexBuffer.numberOfItems = indices.length-2;
+                indexBuffer.numberOfItems = indices.length - 2;
 
                 gl.drawElements(gl.LINES, indices.length, gl.UNSIGNED_SHORT, 0);
 
             } else { // треугольники
 
+                triangles = triangulate(points);
+
+                /*
                 vertices = []; // vertices of triangles
                 for (var i = 0; i < points.length - 2; i++) {
                     vertices.push(points[i], points[i + 1], points[i + 2]);
                 }
-
-                initShaders(vertices, mode);
+                */
+                
+                vertices = []; // vertices of triangles
+                for (var i = 0; i < triangles.length; i++) {
+                    vertices.push(points[triangles[i]]);
+                }
 
                 indices = []; // indices of vertices
                 for (var i = 0; i < vertices.length; i++) {
@@ -118,7 +127,10 @@
                 gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
                 indexBuffer.numberOfItems = indices.length;
 
+                initShaders(vertices, mode);
+
                 gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+
             }
         }
 
@@ -180,7 +192,7 @@
             colorAttributes = [];
             for (var i = 0; i < 200; i++) {
                 cl = color[i % 3];
-                for (let i = 0; i < mode+1; ++i) colorAttributes.push(...cl);
+                for (let i = 0; i < mode + 1; ++i) colorAttributes.push(...cl);
             };
             var color_buffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, color_buffer);
@@ -208,6 +220,7 @@
             //render();
         }
 
+        /*
         function render() {
             gl.clear(gl.COLOR_BUFFER_BIT);
             gl.drawArrays(gl.POINTS, 0, index);
@@ -216,6 +229,8 @@
             window.requestAnimationFrame(render);
 
         }
+        */
+        
     </script>
 </body>
 
