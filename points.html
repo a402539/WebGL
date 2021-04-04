@@ -22,9 +22,6 @@
         }
     </style>
 
-	<script defer src='./js/triangulate.js'></script> <!-- Триангуляция Делоне -->
-	<script defer src='./js/color.js'></script>       <!-- Раскраска триангуляции -->
-
     <script id="vertex" type="x-shader">
         attribute vec2 aVertexPosition;
         attribute vec4 vColor;
@@ -50,6 +47,9 @@
         }
     </script>
 
+	<script defer src='./js/triangulate.js'></script> <!-- Триангуляция Делоне -->
+	<script defer src='./js/color.js'></script> <!-- Раскраска триангуляции -->
+    
     <script>
         var txt = document.getElementById("txt");
         var points = [];
@@ -60,29 +60,51 @@
             points.push([2 * ev.layerX / ev.target.width - 1, 1 - 2 * ev.layerY / ev.target.height]);
             txt.innerHTML = points.join(',\n');
             mode = document.querySelector('#mode').selectedIndex;
-            if (mode == 0 || points.length < 2) {
-                draw(points, 0);
-            } else if (mode == 1 || points.length < 3) {
-                draw(points, 1);
+            if (mode == 0){ //|| points.length < 2) {
+                drawAll(points, 0);
+            } else if (mode == 1){ //|| points.length < 3) {
+                drawAll(points, 1);
             } else {
-                draw(points, 2);
+                drawAll(points, 2);
             }
         }
 
-        function draw(point, mode) {
+        function drawAll(points, mode) {
 
+            // Clear the canvas
+            gl.clearColor(0.5, 0.5, 0.5, 0.9);
 
-            if (mode == 0) { // точки
+            // Enable the depth test
+            gl.enable(gl.DEPTH_TEST);
 
-                initShaders(points, [], mode);
+            // Clear the color buffer bit
+            gl.clear(gl.COLOR_BUFFER_BIT);
 
-                gl.drawArrays(gl.POINTS, 0, points.length);
-
-            } else if (mode == 1) { // отрезки
-
+            // Set the view port
+            gl.viewport(0, 0, canvas.width, canvas.height);
+            
+            color = [
+            [1, 0, 0, 1],
+            [0, 1, 0, 1],
+            [0, 0, 1, 1]
+            ];
+            
+            if (mode==0){
+                indices = []; // indices of vertices
+                for (var i = 0; i < points.length; i++) {
+                    indices.push(i);
+                }
+                
+                colorAttributes = [];
+                for (var i = 0; i < 200; i++) {
+                    cl = color[i % 3];
+                    for (let i = 0; i < mode+1; ++i) colorAttributes.push(...cl);
+                };
+            }
+            else if (mode==1) {
                 vertices = []; // vertices of lines
-                for (var i = 0; i < points.length - 1; i++) {
-                    vertices.push(points[i], points[i + 1]);
+                for (var i = 0; i < points.length - 1; i++) { 
+                    vertices.push(points[i], points[i + 1]); 
                 }
 
                 indices = []; // indices of vertices
@@ -90,59 +112,85 @@
                     indices.push(i);
                 }
 
-                // создание буфера индексов
-                indexBuffer = gl.createBuffer();
-                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-                // указываем число индексов это число равно числу индексов
-                indexBuffer.numberOfItems = indices.length - 2;
+                colorAttributes = [];
+                for (var i = 0; i < 200; i++) {
+                    cl = color[i % 3];
+                    for (var i = 0; i < mode+1; ++i) {
+                        colorAttributes.push(...cl);
+                    }
+                };
 
-                initShaders(vertices, [], mode);
+            }
+            else 
+            if (mode==2){
+                
+                console.log('points', points); // исходные точки
 
-                gl.drawElements(gl.LINES, indices.length, gl.UNSIGNED_SHORT, 0);
+                var triangles = triangulate(points); // список треугольников, заданных индексами вершин
+                console.log('triangles', triangles);
+                
+                var incidence = classmates2(triangles); // список соседей треугольников
+                console.log('incidence', incidence);
+                
+                var stack = []; // стек треугольников
+                coloring2(incidence, stack);
+                console.log('stack', stack);
 
-            } else { // треугольники
+                var colors = color3(incidence, stack); // список цветов треугольников
+                console.log('colors', colors);
 
-                triangles = triangulate(points);
-
-                colors = coloring(triangles);
-
+                check_colors(incidence, stack);
+                
+                // vertices - массив вершин треугольников (общие вершины дублируются)
                 vertices = []; // vertices of triangles
-                for (var i = 0; i < triangles.length; i++) {
+                for (var i = 0; i < triangles.length; i++) { 
                     vertices.push(points[triangles[i]]);
                 }
-
+                console.log('vertices', vertices);
+                
                 indices = []; // indices of vertices
                 for (var i = 0; i < vertices.length; i++) {
                     indices.push(i);
                 }
 
-                // создание буфера индексов
-                indexBuffer = gl.createBuffer();
-                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-                indexBuffer.numberOfItems = indices.length;
-
-                initShaders(vertices, colors, mode);
-
-                gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+                colorAttributes = [];
+                for (var i=0; i<incidence.length; i++) { 
+                    var colori = colors[i];
+                    if (colori >= color.length) {
+                        console.log('illegal color #', colori);
+                    }
+                    var cl = color[colori];
+                    if(cl==undefined){
+                        console.log('Ошибка colori', colori);
+                    }
+                    for (var j=0; j < 3; j++)
+                        colorAttributes.push(...cl); 
+                };
+                console.log('colorAttributes', colorAttributes);
 
             }
-        }
 
-        function initShaders(points, colors, mode) {
-
+            // vertex buffer на основе массива вершин
             // Create an empty buffer object to store the vertex buffer
             var vertex_buffer = gl.createBuffer();
-
             //Bind appropriate array buffer to it
             gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
-
             // Pass the vertex data to the buffer
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points.flat()), gl.STATIC_DRAW);
-
+            if(mode==0){
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points.flat()), gl.STATIC_DRAW);
+            }
+            else {
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices.flat()), gl.STATIC_DRAW);
+            }
             // Unbind the buffer
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+            // index buffer на основе массива indices
+            // создание буфера индексов
+            indexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+            indexBuffer.numberOfItems = indices.length;
 
             /*=========================Shaders========================*/
 
@@ -179,27 +227,6 @@
             // Enable the attribute
             gl.enableVertexAttribArray(coord);
 
-            color = [
-                [1, 0, 0, 1],
-                [0, 1, 0, 1],
-                [0, 0, 1, 1],
-                //[0.5, 0.5, 0.5, 1],
-            ];
-
-            colorAttributes = [];
-            if (mode == 2) {
-                for (var i = 0; i < colors.length; i++) { 
-                    cl=color[colors[i]]; 
-                    for (let i=0; i < mode + 1; ++i) colorAttributes.push(...cl); 
-                    };
-            }
-            else {
-                for (var i = 0; i < 200; i++) {
-                    cl = color[i % color.length];
-                    for (let i = 0; i < mode + 1; ++i) colorAttributes.push(...cl);
-                };
-            }
-
             var color_buffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, color_buffer);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colorAttributes), gl.STATIC_DRAW);
@@ -211,22 +238,18 @@
 
             /*============= Drawing the primitive ===============*/
 
-            // Clear the canvas
-            gl.clearColor(0.5, 0.5, 0.5, 0.9);
-
-            // Enable the depth test
-            gl.enable(gl.DEPTH_TEST);
-
-            // Clear the color buffer bit
-            gl.clear(gl.COLOR_BUFFER_BIT);
-
-            // Set the view port
-            gl.viewport(0, 0, canvas.width, canvas.height);
-
+            if (mode==0) {
+                gl.drawArrays(gl.POINTS, 0, points.length);
+            }
+            else if (mode==1) {
+                gl.drawElements(gl.LINES, indices.length, gl.UNSIGNED_SHORT, 0);
+            }
+            else {
+                gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+            }
             //render();
         }
 
-        /*
         function render() {
             gl.clear(gl.COLOR_BUFFER_BIT);
             gl.drawArrays(gl.POINTS, 0, index);
@@ -235,8 +258,6 @@
             window.requestAnimationFrame(render);
 
         }
-        */
-        
     </script>
 </body>
 
